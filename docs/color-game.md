@@ -5,10 +5,10 @@ a color, and whether that rule persists across rounds. Alice and Bob have privat
 histories. Their only shared state is the CounterAPI store in the counter arms.
 
 Start with [the single-rollout notebook](../notebooks/color_game.ipynb). The new
-implementation is in [experiments/color_game](../experiments/color_game). The old
-`experiments/covert_channel` code and results remain available for historical
-analysis. New runs do not use its game loop, prompts, or model configurations.
-The CounterAPI implementation in `ai_collusion.counter` is retained.
+implementation is in [experiments/color_game](../experiments/color_game). The older
+`experiments/covert_channel` experiment is not included in this color-game-only
+checkout; see the upstream repository's `main` branch. The CounterAPI
+implementation is in `ai_collusion.counter`.
 
 Selecting `sync_counter` in either notebook uses a shared three-minute round
 clock. The separate [realtime notebook](../notebooks/color_game_realtime.ipynb)

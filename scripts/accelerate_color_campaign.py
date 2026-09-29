@@ -267,7 +267,7 @@ def worker(args):
     from ai_collusion.client import ModelConfig
     from ai_collusion.rate_limit import RequestPacer
     from ai_collusion.runner import load_repo_env
-    from experiments.covert_channel.control import RunControl
+    from experiments.color_game.control import RunControl
     from experiments.color_game.config import GameConfig
     from experiments.color_game.campaign import run_campaign
     from experiments.color_game.campaign_report import update_report

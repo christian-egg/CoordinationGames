@@ -334,11 +334,6 @@ def _generate_openai(cfg: ModelConfig, system: str, messages: list[dict], temper
         "messages": [{"role": "system", "content": system}, *messages],
         cfg.max_tokens_key: cfg.max_tokens,
     }
-    from .native_tools import enabled, provider_messages
-
-    native = enabled(cfg.extra_body)
-    if native:
-        req["messages"] = [{"role": "system", "content": system}, *provider_messages(messages)]
     if temperature is not None:
         req["temperature"] = temperature
     if seed is not None:
@@ -369,17 +364,6 @@ def _generate_openai(cfg: ModelConfig, system: str, messages: list[dict], temper
         reasoning = "\n".join(str(getattr(p, "text", p)) for p in reasoning)
     text, inline_think = _split_think(msg.content)
     provider_text = text
-    tool_call, tool_error = None, None
-    if native:
-        from .native_tools import declared_call, clean_notes
-        calls = msg.tool_calls or []
-        try:
-            if len(calls) != 1:
-                raise ValueError(f"Expected one native tool call; received {len(calls)}")
-            tool_call = declared_call(calls[0].function.name, calls[0].function.arguments)
-            text = (clean_notes(text) + "\n" if clean_notes(text) else "") + tool_call["raw"]
-        except (ValueError, TypeError) as exc:
-            tool_error = str(exc)
     if reasoning is None:
         reasoning = inline_think
     text_metadata = {}
@@ -415,8 +399,8 @@ def _generate_openai(cfg: ModelConfig, system: str, messages: list[dict], temper
         "seed_applied": seed is not None,
         "retry_events": retry_events,
         **text_metadata,
-        "tool_mode": "native" if native else "text", "tool_call": tool_call,
-        "tool_error": tool_error, "provider_text": provider_text,
+        "tool_mode": "text", "tool_call": None,
+        "tool_error": None, "provider_text": provider_text,
     }
 
 
@@ -443,19 +427,13 @@ def _generate_responses(cfg: ModelConfig, system: str, messages: list[dict], tem
         req["temperature"] = temperature
     if cfg.extra_body:
         req["extra_body"] = dict(cfg.extra_body)
-    from .native_tools import enabled, responses_messages, declared_call, clean_notes
-    native = enabled(cfg.extra_body)
-    if native:
-        req["input"] = responses_messages(messages)
-        req["tools"] = [{"type": "function", **tool["function"], "strict": True} for tool in cfg.extra_body["tools"]]
-        req["extra_body"].pop("tools")
 
     def call():
         return client.responses.create(**req)
 
     retry_events: list[dict] = []
     resp = _with_retries(cfg, call, retry_events=retry_events)
-    text_parts, summary_parts, calls = [], [], []
+    text_parts, summary_parts = [], []
     for item in resp.output or []:
         if item.type == "reasoning":
             for s_ in getattr(item, "summary", None) or []:
@@ -466,8 +444,6 @@ def _generate_responses(cfg: ModelConfig, system: str, messages: list[dict], tem
             for c in item.content or []:
                 if getattr(c, "type", None) == "output_text":
                     text_parts.append(c.text)
-        elif item.type == "function_call":
-            calls.append(item)
     finish = resp.status
     if finish == "incomplete" and getattr(resp, "incomplete_details", None):
         finish = f"incomplete:{getattr(resp.incomplete_details, 'reason', None)}"
@@ -482,15 +458,6 @@ def _generate_responses(cfg: ModelConfig, system: str, messages: list[dict], tem
             "completion_tokens_details": {"reasoning_tokens": getattr(u.output_tokens_details, "reasoning_tokens", None) if u.output_tokens_details else None},
         }
     text = provider_text = "\n".join(text_parts)
-    tool_call, tool_error = None, None
-    if native:
-        try:
-            if len(calls) != 1:
-                raise ValueError(f"Expected one native tool call; received {len(calls)}")
-            tool_call = declared_call(calls[0].name, calls[0].arguments)
-            text = (clean_notes(text) + "\n" if clean_notes(text) else "") + tool_call["raw"]
-        except (ValueError, TypeError) as exc:
-            tool_error = str(exc)
     return {
         "text": text,
         "reasoning": "\n\n".join(summary_parts) or None,
@@ -499,8 +466,8 @@ def _generate_responses(cfg: ModelConfig, system: str, messages: list[dict], tem
         "raw": resp.model_dump(),
         "seed_applied": False,   # the Responses API has no seed parameter
         "retry_events": retry_events,
-        "tool_mode": "native" if native else "text", "tool_call": tool_call,
-        "tool_error": tool_error, "provider_text": provider_text,
+        "tool_mode": "text", "tool_call": None,
+        "tool_error": None, "provider_text": provider_text,
     }
 
 

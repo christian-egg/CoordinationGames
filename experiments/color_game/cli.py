@@ -1,7 +1,7 @@
 """Launch, inspect, stop, and recover color campaigns outside Jupyter.
 
 Uses the existing model loader, atomic artifact storage, and stop-file control.
-Like covert_channel.overnight, each launch runs from a saved source snapshot.
+Each launch runs from a saved source snapshot.
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from pathlib import Path
 from ai_collusion.client import ModelConfig
 from ai_collusion.runner import load_models, load_repo_env
 from ai_collusion.run_storage import stable_sha256, write_json
-from experiments.covert_channel.control import RunControl
+from .control import RunControl
 from .config import COLORS, SETTINGS, GameConfig
 
 
@@ -56,8 +56,7 @@ def _snapshot(out):
     paths = [p for p in (root / "ai_collusion").rglob("*")
              if p.is_file() and p.suffix in {".py", ".txt", ".json", ".html", ".yaml"}]
     paths += list((root / "experiments/color_game").glob("*.py"))
-    paths += [root / "experiments/__init__.py", root / "experiments/covert_channel/__init__.py",
-              root / "experiments/covert_channel/control.py"]
+    paths += [root / "experiments/__init__.py"]
     hashes = {}
     for path in sorted(paths):
         relative = path.relative_to(root)

@@ -37,7 +37,7 @@ def test_detached_snapshot_runs_without_notebook_and_keeps_transcripts(tmp_path,
     launch = cli._read(out / "launch.json")
     assert launch["selected_settings"] == expected_settings
     assert launch["planned_rollouts"] == launch["planned_rounds"] == len(expected_settings)
-    assert (out / "source/experiments/covert_channel/control.py").is_file()
+    assert (out / "source/experiments/color_game/control.py").is_file()
     assert not (out / "source/notebooks").exists()
     assert not (out / "source/.env").exists()
     assert cli.start_worker(out, foreground=True) == 0

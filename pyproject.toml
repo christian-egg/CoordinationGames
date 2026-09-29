@@ -1,7 +1,7 @@
 [project]
 name = "ai-collusion"
 version = "0.1.0"
-description = "Model-screening harness: run a timed lookup scenario with a mocked shared message board against several models and save the transcripts."
+description = "Color guessing game: agents coordinate on color conventions through a shared counter channel."
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -14,16 +14,6 @@ dependencies = [
 ]
 
 [project.scripts]
-ai-collusion = "ai_collusion.cli:main"
-ai-collusion-wiki = "ai_collusion.wiki_cli:main"
-ai-collusion-docent = "ai_collusion.docent_cli:main"
-ai-collusion-judge = "ai_collusion.judge_cli:main"
-
-ai-collusion-html = "ai_collusion.html_report:main"
-ai-collusion-probe = "ai_collusion.probe_cli:main"
-ai-collusion-stress = "ai_collusion.stress:main"
-ai-collusion-channel = "experiments.covert_channel.run:main"
-ai-collusion-channel-analyze = "experiments.covert_channel.analysis:main"
 ai-collusion-color = "experiments.color_game.cli:main"
 
 [project.optional-dependencies]
@@ -31,9 +21,6 @@ notebook = [
     "ipykernel>=6.29",
     "nbformat>=5.10",
     "nbclient>=0.10",
-]
-browser = [
-    "playwright>=1.62.0",
 ]
 
 [build-system]

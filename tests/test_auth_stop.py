@@ -15,9 +15,7 @@ import openai
 import pytest
 
 from ai_collusion import auth_stop, client
-from ai_collusion.episode import run_episodes
 from ai_collusion.request_pool import RequestPool
-from test_episode_provenance import run_inputs
 
 
 @pytest.fixture(autouse=True)
@@ -125,27 +123,6 @@ def test_waiting_and_queued_workers_never_send_after_401(tmp_path, monkeypatch):
     assert calls == ['first']
     assert RequestPool(tmp_path, 1).snapshot()['active_requests'] == 0
     assert (tmp_path / auth_stop.MARKER).read_text() == auth_stop.MESSAGE + '\n'
-
-
-@pytest.mark.parametrize('source', ['evaluee', 'environment'])
-@pytest.mark.parametrize('workers', [1, 3])
-def test_episode_batch_propagates_fatal_exit(source, workers, tmp_path, monkeypatch,
-                                          unauthorized_api, capsys):
-    inputs = run_inputs(tmp_path)
-    inputs.update(n_samples=5, workers=workers)
-    monkeypatch.setenv('AI_COLLUSION_REQUEST_POOL_DIR', str(tmp_path / 'pool'))
-    monkeypatch.setenv('AI_COLLUSION_REQUEST_POOL_SIZE', '1')
-    if source == 'evaluee':
-        inputs['models'] = [replace(inputs['models'][0], transport='openai',
-                                   api_key_env='TEST_AUTH_KEY', base_url='https://example.test/v1')]
-    else:
-        inputs['models'] = [replace(inputs['models'][0], stub_text='shell("pwd")')]
-        inputs['env_model'] = replace(inputs['env_model'], transport='openai',
-                                      api_key_env='TEST_AUTH_KEY', base_url='https://example.test/v1')
-    with pytest.raises(auth_stop.AuthenticationStop):
-        run_episodes(**inputs)
-    assert len(unauthorized_api) == 1
-    assert 'wrote ' not in capsys.readouterr().err
 
 
 def test_fatal_exit_is_nonzero_and_persists_across_processes(tmp_path):

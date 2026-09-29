@@ -102,33 +102,6 @@ def test_missing_multiple_wrong_or_invalid_function_calls_are_rejected_without_r
     assert len(requests) == 1
 
 
-def test_rejected_multiple_calls_are_journaled_without_executing_any_action(api):
-    from experiments.covert_channel.channel import Channel
-    from experiments.covert_channel.participants import Agent
-
-    payload, requests = api
-    channel = Channel("sender_to_receiver", "test", counter_mode="wiki")
-    calls = [tool_call(arguments=json.dumps({"action": "get", "url": channel.url + "/up"})),
-             tool_call(arguments='{"action":"done"}', call_id="second")]
-    payload["choices"][0]["message"].update(content='{"action":"done"}', tool_calls=calls)
-    events = []
-    agent = Agent("sender", config(), "test", ["red", "blue"], secret="red", max_turns=2,
-                  counter_url=channel.url, counter_mode="wiki", emit=events.append)
-
-    agent.take_turn([channel], 0)
-
-    response_event = next(e for e in events if e["kind"] == "response")
-    assert response_event["response"]["raw"]["choices"][0]["message"]["tool_calls"] == calls
-    assert response_event["response"]["text_source"] == "rejected_tool_call"
-    turn = agent.turns[-1]
-    assert turn["source"] == "action-error" and turn["action"] is None
-    assert "received 2" in turn["result"]
-    assert agent.error is None and agent.turn == 1 and not agent.finished
-    assert channel.media["sender"].counts == {} and channel.events == []
-    assert len(requests) == 1
-    assert [e["kind"] for e in events] == ["request", "response", "turn"]
-
-
 def test_json_action_validation_is_left_to_the_caller(api):
     payload, requests = api
     payload["choices"][0]["message"]["tool_calls"] = [tool_call(arguments="not a JSON action")]

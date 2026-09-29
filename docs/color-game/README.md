@@ -1,6 +1,6 @@
 # Color-game reports
 
-Reports and operational history for the color-game study. Start with the [game design](../color-game.md) or return to the [documentation index](../README.md).
+Reports and operational history for the color-game study. Start with the [game design](../color-game.md) or return to the [repository README](../../README.md).
 
 - [DeepSeek and GLM request rates: September 13](color-game-acceleration-2026-09-13.md)
 - [Why color-game communication fails](color-game-channel-failures-2026-09-13.md)
