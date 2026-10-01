@@ -9,3 +9,7 @@ models.yaml
 .env
 notebooks/.ipynb_checkpoints/
 reports/color-game/
+
+# Local working notes (not versioned)
+/CLAUDE.md
+/notes/
