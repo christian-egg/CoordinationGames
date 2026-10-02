@@ -18,6 +18,7 @@ class Broadcast:
     """One channel per agent. Only its owner writes to it; every agent reads it."""
 
     name = "broadcast"
+    write_fields = ("bits",)  # write_channel's fields besides "action"; no recipient
 
     def __init__(self, config):
         self.n_agents = config.n_agents
