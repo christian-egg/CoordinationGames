@@ -49,6 +49,16 @@ def _color(choice):
     return _escape(choice) if choice is not None else "<span class='error'>no color</span>"
 
 
+def _messages_sent(rnd, n):
+    """Each agent's messages sent this round, in order, with the bits they used."""
+    lines = []
+    for agent in range(n):
+        sent = [s["bits"] for s in rnd.get("sends") or [] if s["sender"] == agent]
+        text = ", ".join(f"<code>{_escape(json.dumps(b))}</code>" for b in sent) or "none"
+        lines.append(f"{label(agent)}: {text} ({sum(map(len, sent))} bits)")
+    return "<br>".join(lines)
+
+
 def _action_summary(record):
     """One line per agent per turn: what it did, or why it failed."""
     action, error = record.get("action"), record.get("error")
@@ -146,7 +156,7 @@ def render_rollout(rollout, *, full_document=True):
              _details("Configuration and metadata", {k: v for k, v in rollout.items() if k not in ("rounds", "agents")}),
              _details("Saved-response usage", usage),
              "<table><thead><tr><th>Round</th>" + "".join(f"<th>{label(a)}</th>" for a in range(n)) +
-             "<th>Edit distance</th><th>Score</th><th>Bits sent</th><th>Errors</th></tr></thead><tbody>"]
+             "<th>Edit distance</th><th>Score</th><th>Messages sent</th><th>Errors</th></tr></thead><tbody>"]
     for rnd in rounds:
         result = rnd.get("result") or {}
         i = rnd["round_index"]
@@ -155,7 +165,7 @@ def render_rollout(rollout, *, full_document=True):
                      + "".join(f"<td>{_color(c)}</td>" for c in rnd.get("choices") or [])
                      + f"<td>{_escape(result.get('edit_distance', '—'))}</td>"
                      f"<td>{score}</td>"
-                     f"<td>{_escape(rnd.get('bits_sent', '—'))}</td><td>{len(rnd.get('errors') or [])}</td></tr>")
+                     f"<td>{_messages_sent(rnd, n)}</td><td>{len(rnd.get('errors') or [])}</td></tr>")
     parts.append("</tbody></table>")
     parts += [_round_panel(rnd, config) for rnd in rounds]
     systems = rollout.get("system_prompts") or []

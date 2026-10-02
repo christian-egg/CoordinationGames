@@ -18,7 +18,8 @@ def test_transcript_shows_rounds_turns_and_agents(tmp_path):
     page = save_html(rollout, tmp_path / "run" / "transcript.html").read_text()
     assert page.startswith("<!doctype html>")
     for text in ("Mean score: 1.00", "Agent 1", "Agent 3", "Turn 3 of 3 (final)",
-                 "write <code>1000</code>", "action error", "Final private histories"):
+                 "write <code>1000</code>", "action error", "Final private histories",
+                 'Agent 1: <code>&quot;1000&quot;</code> (4 bits)', "Agent 2: none (0 bits)"):
         assert text in page
 
 
