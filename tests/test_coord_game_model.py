@@ -88,6 +88,17 @@ def test_bad_native_calls_are_rejected_not_repaired(monkeypatch, transport, call
         parse_action(normalise_response(response), WRITE_TURN, CHANNEL)
 
 
+@pytest.mark.parametrize("transport", ["responses", "openai"])
+def test_effort_reaches_the_request(monkeypatch, transport):
+    from dataclasses import replace
+    seen = fake_generate(monkeypatch, native(transport, ("pass", "{}")))
+    ModelAgent(replace(model(transport), effort="medium"))(request(WRITE_TURN))
+    if transport == "openai":  # Chat Completions: in the body
+        assert seen["cfg"].extra_body["reasoning_effort"] == "medium"
+    else:  # Responses: the shared client sends cfg.effort itself
+        assert seen["cfg"].effort == "medium" and "reasoning_effort" not in seen["cfg"].extra_body
+
+
 def test_unsupported_transport_is_refused():
     with pytest.raises(NotImplementedError, match="not supported"):
         ModelAgent(model("anthropic"))

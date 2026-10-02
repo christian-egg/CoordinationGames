@@ -1,9 +1,9 @@
 """Run rollouts with a real model. Each rollout makes paid API calls.
 
-    uv run python -m experiments.coord_game.run --model gpt-5.6-luna-high
-    uv run python -m experiments.coord_game.run --model gpt-5.6-luna-high --effort high --rollouts 3
+    uv run python -m experiments.coord_game.run --model luna-openrouter
+    uv run python -m experiments.coord_game.run --model luna-openrouter --effort high --rollouts 3
 
---model names an entry in the models file (default: experiments/color_game/models.yaml).
+--model names an entry in the models file (default: experiments/coord_game/models.yaml).
 Every agent uses its own ModelAgent with the same model config. The API key is
 read from .env or the shell, by the variable name in the models file.
 """
@@ -24,7 +24,7 @@ from .prompts import label
 from .view import save_html
 
 REPO = Path(__file__).resolve().parents[2]
-DEFAULT_MODELS = REPO / "experiments" / "color_game" / "models.yaml"
+DEFAULT_MODELS = REPO / "experiments" / "coord_game" / "models.yaml"
 EFFORTS = ("none", "low", "medium", "high", "xhigh", "max")
 
 

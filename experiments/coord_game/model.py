@@ -102,6 +102,10 @@ class ModelAgent:
         for key in ("tools", "tool_choice", "parallel_tool_calls", "response_format"):
             extra.pop(key, None)  # the game sets these, per turn
         extra.update(_wrap_tools(self.model.transport, tools))
+        if self.model.transport == "openai" and self.model.effort is not None:
+            # The shared client sends `effort` only on the responses transport;
+            # Chat Completions (including OpenRouter) takes reasoning_effort in the body.
+            extra["reasoning_effort"] = self.model.effort
         return replace(self.model, extra_body=extra, response_tool_name=None)
 
     def __call__(self, request):
