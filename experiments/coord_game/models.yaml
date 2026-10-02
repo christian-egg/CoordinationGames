@@ -1,0 +1,22 @@
+# Model configs for the coordination game. No secrets here: api_key_env is the
+# NAME of the environment variable holding the key (set it in the repo's .env).
+# Effort comes from run.py's --effort flag (default: medium).
+defaults:
+  temperature: null
+  max_tokens: 32768
+  timeout_s: 600
+  retries: 2
+models:
+  # OpenRouter's OpenAI-compatible Chat Completions API.
+  - name: luna-openrouter
+    transport: openai
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+    model: openai/gpt-5.6-luna
+  # Direct OpenAI Responses API (needs an OpenAI key).
+  - name: luna-openai
+    transport: responses
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+    model: gpt-5.6-luna
+    reasoning_summary: auto
