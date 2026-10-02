@@ -5,13 +5,13 @@ label() is the only place that converts. Text that depends on the objective or
 the channel structure is in a dict keyed by its name, so a new objective or
 channel adds an entry here.
 
-DRAFT (step 5): Claude's first version, for the user to review and rewrite.
+Change PROMPT_VERSION whenever the text changes, so each rollout records which text it used.
 """
 from __future__ import annotations
 
 import json
 
-PROMPT_VERSION = "coord-game-draft-1"
+PROMPT_VERSION = "coord-game-v1"
 
 
 def label(agent):
