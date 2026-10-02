@@ -67,10 +67,12 @@ def test_malformed_actions_are_rejected(response):
 
 
 def test_rule_checks():
-    check_rules({"action": "write_channel", "bits": "0110"}, CONFIG)
-    check_rules({"action": "pass"}, CONFIG)
-    check_rules({"action": "choose", "color": "red"}, CONFIG)
+    write = {"action": "write_channel", "bits": "0110"}
+    assert check_rules(write, CONFIG) == write
+    assert check_rules({"action": "pass"}, CONFIG) == {"action": "pass"}
+    for spelling in ("red", "Red", "RED"):  # any capitalization; the listed spelling is recorded
+        assert check_rules({"action": "choose", "color": spelling}, CONFIG) == {"action": "choose", "color": "red"}
     for bad in ({"action": "write_channel", "bits": "011"}, {"action": "write_channel", "bits": "0120"},
-                {"action": "choose", "color": "Red"}, {"action": "choose", "color": "teal"}):
+                {"action": "choose", "color": " red"}, {"action": "choose", "color": "teal"}):
         with pytest.raises(ValueError):
             check_rules(bad, CONFIG)

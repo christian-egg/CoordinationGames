@@ -20,6 +20,7 @@ def test_defaults_are_milestone_one():
     ("bits", True), ("actions_per_turn", 0), ("channel", "telepathy"),
     ("objective", "anything"), ("feedback", "partial"), ("seed", "1"),
     ("colors", ("red",)), ("colors", ("red", "red")), ("colors", ("red", " blue")),
+    ("colors", ("red", "Red")),
 ])
 def test_invalid_values_are_rejected(field, value):
     with pytest.raises(ValueError):

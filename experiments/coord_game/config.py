@@ -38,6 +38,8 @@ class GameConfig:
             raise ValueError("Use at least two distinct colors")
         if any(not isinstance(c, str) or not c.strip() or c != c.strip() for c in self.colors):
             raise ValueError("Each color must be a nonempty string without outer spaces")
+        if len({c.casefold() for c in self.colors}) != len(self.colors):
+            raise ValueError("Colors must differ by more than capitalization")
         for name, options in (("channel", CHANNELS), ("objective", OBJECTIVES), ("feedback", FEEDBACK)):
             if getattr(self, name) not in options:
                 raise ValueError(f"{name} must be one of {options}")

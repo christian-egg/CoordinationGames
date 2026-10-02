@@ -3,7 +3,7 @@
 - Shape checks (parse_action): the response holds exactly one action with exactly
   its declared fields, all strings. Adapted from the color game's _parse_action.
 - Rule checks (check_rules): the action is legal in this game, e.g. a message of
-  exactly B bits, or a color from the list.
+  exactly B bits, or a color from the list (in any capitalization).
 
 An action is a dict such as {"action": "write_channel", "bits": "01100001"}.
 """
@@ -87,8 +87,17 @@ def parse_action(response, actions, channel):
 
 
 def check_rules(action, config):
-    """Rule checks for an action that passed parse_action. Raise ValueError if illegal."""
+    """Rule checks for an action that passed parse_action.
+
+    Return the action with a chosen color in its listed spelling (capitalization
+    is ignored), or raise ValueError if the action is illegal.
+    """
+    action = dict(action)
     if action["action"] == "write_channel" and not valid_message(action["bits"], config.bits):
         raise ValueError(f"A message must be exactly {config.bits} characters, each 0 or 1")
-    if action["action"] == "choose" and action["color"] not in config.colors:
-        raise ValueError("Choose a color from your list, spelled exactly as listed")
+    if action["action"] == "choose":
+        listed = {color.casefold(): color for color in config.colors}
+        if action["color"].casefold() not in listed:
+            raise ValueError("Choose a color from your list")
+        action["color"] = listed[action["color"].casefold()]
+    return action
