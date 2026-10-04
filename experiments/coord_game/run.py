@@ -17,7 +17,7 @@ from pathlib import Path
 
 from ai_collusion.runner import load_models
 
-from .config import GameConfig
+from .config import FEEDBACK, GameConfig
 from .game import run_rollout
 from .model import ModelAgent
 from .prompts import label
@@ -52,6 +52,8 @@ def main(argv=None):
     parser.add_argument("--models-file", type=Path, default=DEFAULT_MODELS)
     parser.add_argument("--effort", choices=EFFORTS, default="medium",
                         help="reasoning effort, overriding the models file (default: medium)")
+    parser.add_argument("--feedback", choices=FEEDBACK, default="full",
+                        help="end-of-round report shown to agents (default: full)")
     parser.add_argument("--rollouts", type=int, default=1)
     parser.add_argument("--seed", type=int, default=0, help="seed of the first rollout; later ones add 1 each")
     args = parser.parse_args(argv)
@@ -63,11 +65,11 @@ def main(argv=None):
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     for index in range(args.rollouts):
-        config = GameConfig(seed=args.seed + index)
+        config = GameConfig(seed=args.seed + index, feedback=args.feedback)
         calls = config.n_agents * config.rounds * config.turns
-        output_dir = REPO / "reports" / "coord-game" / f"{stamp}-{args.model}-{args.effort}-seed{config.seed}"
+        output_dir = REPO / "reports" / "coord-game" / f"{stamp}-{args.model}-{args.effort}-{args.feedback}-seed{config.seed}"
         print(f"Rollout {index + 1}/{args.rollouts}: {model.model}, effort {args.effort}, "
-              f"seed {config.seed}, {calls} calls -> {output_dir}", flush=True)
+              f"feedback {args.feedback}, seed {config.seed}, {calls} calls -> {output_dir}", flush=True)
         agents = [ModelAgent(model) for _ in range(config.n_agents)]
         rollout = None
         try:

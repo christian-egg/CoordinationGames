@@ -22,6 +22,17 @@ def export_key(rollout_id):
     return f"{EXPORT_SCHEMA}:{rollout_id}"
 
 
+def condition_tags(rollout):
+    """Tags naming the experimental condition, e.g. ["feedback:full", "effort:medium"].
+    Each tag is also a top-level metadata field, for filtering in Docent."""
+    config = rollout["config"]
+    tags = [f"feedback:{config['feedback']}"]
+    efforts = {m.get("effort") for m in rollout.get("models") or []} - {None}
+    if efforts:  # omitted when unknown (e.g. scripted agents)
+        tags.append(f"effort:{efforts.pop() if len(efforts) == 1 else 'mixed'}")
+    return tags
+
+
 def _require(condition, message):
     if not condition:
         raise ValueError(message)
@@ -99,6 +110,7 @@ def rollout_to_agent_run(rollout):
         "rollout_id": rollout_id, "status": status,
         "prompt_version": rollout.get("prompt_version"), "config": config, "summary": summary,
         "model_alias": " / ".join(model_names), "source": rollout.get("source"),
+        **dict(tag.split(":", 1) for tag in condition_tags(rollout)), "tags": condition_tags(rollout),
         "rounds": [{key: rnd.get(key) for key in ("round_index", "choices", "result", "bits_sent", "sends",
                                                    "color_orders", "valid_for_analysis", "errors")}
                    for rnd in rounds],
@@ -108,6 +120,6 @@ def rollout_to_agent_run(rollout):
     score = "—" if mean is None else f"{mean:.2f}"
     return AgentRun(
         name=(f"{partial}{' / '.join(model_names)} | {n} agents | {config['channel']} | {config['objective']} | "
-              f"seed {config['seed']} | score {score} | met {met}/{config['rounds']}"),
+              f"feedback {config['feedback']} | seed {config['seed']} | score {score} | met {met}/{config['rounds']}"),
         description="One transcript per agent. Scores and other agents' choices are research metadata.",
         transcripts=transcripts, metadata=json.loads(json.dumps(metadata, default=str)))

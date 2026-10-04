@@ -2,8 +2,10 @@
 
     uv run python -m experiments.coord_game.docent_upload reports/coord-game/<run> --collection coord-game
 
-Collections are private unless --public is passed. After a successful upload, a
-receipt (docent_upload.json) is written in the run folder; a run with a receipt
+A new collection is private unless --public is passed; the final line reports
+the collection's actual visibility, which may have been changed in the web interface. After a successful upload, a
+receipt (docent_upload.json) is written in the run folder, and the run is tagged
+with its condition (e.g. feedback:full, effort:medium); a run with a receipt
 for the same collection is skipped, so re-running is safe. Each run also carries
 a stable export_key in its Docent metadata. Needs DOCENT_API_KEY in .env or the shell.
 """
@@ -51,6 +53,8 @@ def main(argv=None):
             print(f"skip (receipt found): {run.name}")
             continue
         client.add_agent_runs(collection_id, [run])
+        for tag in run.metadata["tags"]:
+            client.tag_transcript(collection_id, run.id, tag)
         receipts.append({"collection_id": collection_id, "collection_name": args.collection,
                          "agent_run_id": run.id, "export_key": run.metadata["export_key"],
                          "uploaded_utc": datetime.now(timezone.utc).isoformat()})
@@ -60,8 +64,9 @@ def main(argv=None):
     if args.public:
         client.share_collection_with_public(collection_id, permission="read")
         print("Collection is now publicly readable.")
+    public = any(r.get("subject_type") == "public" for r in client.get_collection_collaborators(collection_id))
     print(f"Collection {args.collection!r} ({collection_id}): {uploaded} uploaded, "
-          f"{len(runs) - uploaded} skipped. {'Public.' if args.public else 'Private unless shared.'}")
+          f"{len(runs) - uploaded} skipped. Visibility: {'PUBLIC' if public else 'private'}.")
 
 
 if __name__ == "__main__":

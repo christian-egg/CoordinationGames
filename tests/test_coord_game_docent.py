@@ -43,7 +43,9 @@ def test_run_metadata_and_stable_export_key(rollout):
     assert run.metadata["export_key"] == export_key(rollout["rollout_id"]) == "coord-game-docent/v1:" + rollout["rollout_id"]
     assert run.metadata["summary"]["infrastructure_errors"] == 2
     assert run.metadata["rounds"][0]["choices"] == ["red", "red", None]
-    assert "3 agents | broadcast | matching" in run.name
+    assert "3 agents | broadcast | matching | feedback full | seed 0" in run.name
+    assert run.metadata["tags"] == ["feedback:full"]  # plain callables have no effort to tag
+    assert run.metadata["feedback"] == "full"
 
 
 def test_mismatched_history_is_refused(rollout):
