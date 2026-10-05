@@ -112,7 +112,8 @@ def rollout_to_agent_run(rollout):
         "model_alias": " / ".join(model_names), "source": rollout.get("source"),
         **dict(tag.split(":", 1) for tag in condition_tags(rollout)), "tags": condition_tags(rollout),
         "rounds": [{key: rnd.get(key) for key in ("round_index", "choices", "result", "bits_sent", "sends",
-                                                   "color_orders", "valid_for_analysis", "errors")}
+                                                   "colors", "color_orders", "private_info",
+                                                   "valid_for_analysis", "errors")}
                    for rnd in rounds],
         "reasoning_note": "Returned reasoning is attached for analysis. It was never replayed to the model.",
     }

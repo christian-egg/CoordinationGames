@@ -165,7 +165,7 @@ def run_rollout(config: GameConfig, agents, *, output_dir, on_event=None) -> dic
                 text = json.dumps(response["action"]) if isinstance(response.get("action"), dict) else ""
             histories[agent].append({"role": "assistant", "content": text})
             try:
-                action = check_rules(parse_action(response, actions, channel), config)
+                action = check_rules(parse_action(response, actions, channel), config, rnd["colors"])
             except ValueError as exc:
                 # An invalid write counts as a pass; an invalid choice leaves no color.
                 record["error"] = {"type": "InvalidAction", "category": "action", "message": str(exc)}
@@ -205,19 +205,21 @@ def run_rollout(config: GameConfig, agents, *, output_dir, on_event=None) -> dic
         journal.write("rollout_start", metadata=copy.deepcopy(rollout))
         for round_index in range(config.rounds):
             channel.reset()  # channels are emptied every round
-            orders = color_orders(config, round_index)
+            colors = objective.round_colors(config, round_index)
+            orders = color_orders(config, round_index, colors)
             private = objective.private_info(config, round_index)
-            rnd = {"round_index": round_index, "color_orders": [list(o) for o in orders],
+            rnd = {"round_index": round_index, "colors": list(colors), "color_orders": [list(o) for o in orders],
                    "private_info": private, "turns": [], "choices": [None] * n,
                    "errors": [], "valid_for_analysis": True}
             rollout["rounds"].append(rnd)
             for agent in range(n):
                 histories[agent].append({"role": "user", "content": round_message(
                     config, agent, round_index, orders[agent], private[agent])})
-            journal.write("round_start", round_index=round_index, color_orders=rnd["color_orders"])
+            journal.write("round_start", round_index=round_index, colors=rnd["colors"],
+                          color_orders=rnd["color_orders"], private_info=private)
             for turn_index in range(config.turns):
                 play_turn(rnd, round_index, turn_index)
-            rnd["result"] = objective.result(rnd["choices"], config, private)
+            rnd["result"] = objective.result(rnd["choices"], config, private, colors)
             rnd["bits_sent"] = [channel.bits_sent(round_index, i) for i in range(n)]
             rnd["sends"] = [s for s in channel.sends if s["round_index"] == round_index]
             for agent in range(n):

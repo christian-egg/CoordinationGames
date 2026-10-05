@@ -125,3 +125,33 @@ def test_refuses_unbuilt_options_and_reused_directories(tmp_path):
         run_rollout(CONFIG, leader_and_followers(), output_dir=tmp_path / "used")
     with pytest.raises(ValueError):
         run_rollout(CONFIG, leader_and_followers()[:2], output_dir=tmp_path / "two")
+
+
+def test_round_colors_and_private_info_flow_through_the_loop(tmp_path, monkeypatch):
+    """A stand-in objective with 3 colors and a private preference per agent."""
+    from experiments.coord_game import config as config_module, objectives, prompts
+
+    class Stand_in(objectives.Matching):
+        name = "majority"
+
+        def round_colors(self, config, round_index):
+            return ("red", "blue", "green")
+
+        def private_info(self, config, round_index):
+            return [{"preference": "blue"}] * config.n_agents
+
+    monkeypatch.setitem(objectives.REGISTRY, "majority", Stand_in)
+    monkeypatch.setattr(config_module, "IMPLEMENTED_OBJECTIVES", ("matching", "majority"))
+    monkeypatch.setitem(prompts.OBJECTIVE_PROMPTS, "majority", "Stand-in objective.")
+    monkeypatch.setitem(prompts.PRIVATE_INFO_PROMPTS, "majority", "Your preference: {preference}.")
+    agents = [scripted({(0, 2): {"action": "choose", "color": "Blue"}}),
+              scripted({(0, 2): {"action": "choose", "color": "blue"}}),
+              scripted({(0, 2): {"action": "choose", "color": "yellow"}})]  # not in this round's list
+    rollout = run_rollout(GameConfig(rounds=1, bits=4, objective="majority"), agents, output_dir=tmp_path / "run")
+    rnd = rollout["rounds"][0]
+    assert rnd["colors"] == ["red", "blue", "green"]
+    assert all(sorted(order) == sorted(rnd["colors"]) for order in rnd["color_orders"])
+    assert rnd["private_info"] == [{"preference": "blue"}] * 3
+    assert rnd["choices"] == ["blue", "blue", None]  # "yellow" is invalid this round
+    opening = agents[0].requests[0]["messages"][0]["content"]
+    assert "Your preference: blue." in opening and '"yellow"' not in opening

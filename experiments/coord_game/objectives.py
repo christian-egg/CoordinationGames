@@ -17,19 +17,25 @@ class Objective:
 
     name: str
 
+    def round_colors(self, config, round_index):
+        """The colors available this round (each agent sees them in its own order)."""
+        return tuple(config.colors)
+
     def private_info(self, config, round_index):
-        """Per-agent private information for one round (e.g. a preference); None if none."""
+        """Per-agent private information for one round, as a dict per agent
+        (e.g. {"preference": "red"}), or None for an agent with none."""
         return [None] * config.n_agents
 
     def edit_distance(self, choices, config, private_info):
         raise NotImplementedError
 
-    def result(self, choices, config, private_info):
-        """Validate a final assignment and score it."""
+    def result(self, choices, config, private_info, colors=None):
+        """Validate a final assignment against this round's colors and score it."""
+        colors = config.colors if colors is None else colors
         choices = list(choices)
         if len(choices) != config.n_agents:
             raise ValueError("choices must have one entry per agent")
-        if any(c is not None and c not in config.colors for c in choices):
+        if any(c is not None and c not in colors for c in choices):
             raise ValueError("Each choice must be a listed color or None")
         distance = self.edit_distance(choices, config, private_info)
         if type(distance) is not int or not 0 <= distance <= config.n_agents:

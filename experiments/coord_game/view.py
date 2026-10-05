@@ -99,7 +99,9 @@ def _round_panel(rnd, config):
              f"{result.get('score', 0):.2f}{validity}</h3>",
              "<p>" + " · ".join(f"{label(a)}: <strong>{_color(c)}</strong>"
                                 for a, c in enumerate(rnd.get("choices") or [])) + "</p>",
-             _details("Each agent's private color order", {label(a): o for a, o in enumerate(rnd.get("color_orders") or [])})]
+             _details("Each agent's private color order", {label(a): o for a, o in enumerate(rnd.get("color_orders") or [])}),
+             _details("Each agent's private information",
+                      {label(a): p for a, p in enumerate(rnd.get("private_info") or []) if p is not None} or None)]
     for turn in rnd.get("turns") or []:
         parts.append(_turn_panel(turn, config.get("turns", len(rnd["turns"]))))
     parts += [_details("Round errors", rnd.get("errors") or None, opened=True),

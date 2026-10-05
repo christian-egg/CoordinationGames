@@ -59,3 +59,12 @@ def test_color_orders_are_private_fresh_and_reproducible():
     for bad in (-1, config.rounds, 1.0):
         with pytest.raises(ValueError):
             color_orders(config, bad)
+
+
+@pytest.mark.parametrize("objective", ["unique", "constraints"])
+def test_unique_and_constraints_need_fewer_agents_than_colors(objective):
+    GameConfig(objective=objective, n_agents=7)  # 7 agents, 8 colors: allowed
+    with pytest.raises(ValueError, match="fewer agents than colors"):
+        GameConfig(objective=objective, n_agents=8)
+    GameConfig(objective=objective, n_agents=8, colors=tuple("abcdefghi"))  # 9 colors: allowed
+    GameConfig(objective="matching", n_agents=8)  # other objectives have no limit

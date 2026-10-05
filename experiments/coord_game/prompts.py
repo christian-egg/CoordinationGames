@@ -50,6 +50,10 @@ CHANNEL_VIEW_HEADINGS = {
     "broadcast": "Current messages on the other agents' channels:",
 }
 
+# The private-information line in the round message, keyed by objective. Filled from
+# the agent's private-info dict, e.g. {"preference": "red"}. Added with each objective.
+PRIVATE_INFO_PROMPTS = {}
+
 FEEDBACK_PROMPTS = {
     "full": "After each round, every agent is told the group's score and every agent's final color.",
     "score_only": "After each round, every agent is told the group's score, but not the other agents' colors.",
@@ -116,8 +120,10 @@ def round_message(config, agent, round_index, colors, private_info=None):
     lines = [f"Round {round_index + 1} of {config.rounds}.",
              f"Objective: {OBJECTIVE_PROMPTS[config.objective]}",
              f"Your colors this round: {json.dumps(list(colors))}"]
-    if private_info is not None:  # no milestone-1 objective has private information
-        raise NotImplementedError("private information text is not written yet")
+    if private_info is not None:
+        if config.objective not in PRIVATE_INFO_PROMPTS:
+            raise NotImplementedError(f"private information text for {config.objective!r} is not written yet")
+        lines.append(PRIVATE_INFO_PROMPTS[config.objective].format(**private_info))
     return "\n".join(lines)
 
 

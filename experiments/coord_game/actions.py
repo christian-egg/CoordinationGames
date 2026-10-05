@@ -86,8 +86,9 @@ def parse_action(response, actions, channel):
     return dict(action)
 
 
-def check_rules(action, config):
-    """Rule checks for an action that passed parse_action.
+def check_rules(action, config, colors=None):
+    """Rule checks for an action that passed parse_action. colors is this round's
+    color list (default: all colors).
 
     Return the action with a chosen color in its listed spelling (capitalization
     is ignored), or raise ValueError if the action is illegal.
@@ -96,7 +97,7 @@ def check_rules(action, config):
     if action["action"] == "write_channel" and not valid_message(action["bits"], config.bits):
         raise ValueError(f"A message must be exactly {config.bits} characters, each 0 or 1")
     if action["action"] == "choose":
-        listed = {color.casefold(): color for color in config.colors}
+        listed = {color.casefold(): color for color in (config.colors if colors is None else colors)}
         if action["color"].casefold() not in listed:
             raise ValueError("Choose a color from your list")
         action["color"] = listed[action["color"].casefold()]

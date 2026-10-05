@@ -45,6 +45,10 @@ class GameConfig:
                 raise ValueError(f"{name} must be one of {options}")
         if type(self.seed) is not int:
             raise ValueError("seed must be an integer")
+        # Unique needs N + 1 colors; Constraints forbids a different color per agent.
+        if self.objective in ("unique", "constraints") and self.n_agents >= len(self.colors):
+            raise ValueError(f"{self.objective} needs fewer agents than colors "
+                             f"({self.n_agents} agents, {len(self.colors)} colors)")
 
     def require_implemented(self):
         """Raise before any model call if this config uses a planned but unbuilt option."""
@@ -68,8 +72,8 @@ class GameConfig:
         return cls(**data)
 
 
-def color_orders(config: GameConfig, round_index: int) -> list[tuple[str, ...]]:
-    """Each agent's private, shuffled color list for one round.
+def color_orders(config: GameConfig, round_index: int, colors=None) -> list[tuple[str, ...]]:
+    """Each agent's private, shuffled order of this round's colors (default: all colors).
 
     A fresh shuffle every round, reproducible from the seed. String seeds are
     hashed deterministically, so the order doesn't depend on PYTHONHASHSEED.
@@ -78,7 +82,7 @@ def color_orders(config: GameConfig, round_index: int) -> list[tuple[str, ...]]:
         raise ValueError("round_index must be an integer in [0, rounds)")
     orders = []
     for agent in range(config.n_agents):
-        order = list(config.colors)
+        order = list(config.colors if colors is None else colors)
         random.Random(f"coord-game-v1:{config.seed}:round-{round_index}:agent-{agent}").shuffle(order)
         orders.append(tuple(order))
     return orders
