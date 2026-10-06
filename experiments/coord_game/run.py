@@ -56,6 +56,8 @@ def main(argv=None):
     parser.add_argument("--n-agents", type=int, default=3, help="number of agents (default: 3)")
     parser.add_argument("--feedback", choices=FEEDBACK, default="full",
                         help="end-of-round report shown to agents (default: full)")
+    parser.add_argument("--carry-reasoning", action=argparse.BooleanOptionalAction, default=True,
+                        help="pass each agent's earlier reasoning back to it (default: on)")
     parser.add_argument("--rollouts", type=int, default=1)
     parser.add_argument("--seed", type=int, default=0, help="seed of the first rollout; later ones add 1 each")
     args = parser.parse_args(argv)
@@ -68,9 +70,9 @@ def main(argv=None):
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     for index in range(args.rollouts):
         config = GameConfig(seed=args.seed + index, feedback=args.feedback, objective=args.objective,
-                            n_agents=args.n_agents)
+                            n_agents=args.n_agents, carry_reasoning=args.carry_reasoning)
         calls = config.n_agents * config.rounds * config.turns
-        output_dir = REPO / "reports" / "coord-game" / f"{stamp}-{args.model}-{args.effort}-n{config.n_agents}-{args.objective}-{args.feedback}-seed{config.seed}"
+        output_dir = REPO / "reports" / "coord-game" / f"{stamp}-{args.model}-{args.effort}-n{config.n_agents}-{args.objective}-{args.feedback}-{'carry' if args.carry_reasoning else 'nocarry'}-seed{config.seed}"
         print(f"Rollout {index + 1}/{args.rollouts}: {model.model}, effort {args.effort}, "
               f"{config.n_agents} agents, {args.objective}, feedback {args.feedback}, seed {config.seed}, {calls} calls -> {output_dir}", flush=True)
         agents = [ModelAgent(model) for _ in range(config.n_agents)]

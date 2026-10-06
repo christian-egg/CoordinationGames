@@ -26,6 +26,9 @@ class GameConfig:
     objective: str = "matching"
     feedback: str = "full"
     seed: int = 0
+    # Pass each agent's own earlier reasoning back to it on later calls (when the
+    # provider returns it). Rollouts saved before this field existed did not carry it.
+    carry_reasoning: bool = True
 
     def __post_init__(self):
         object.__setattr__(self, "colors", tuple(self.colors))
@@ -43,6 +46,8 @@ class GameConfig:
         for name, options in (("channel", CHANNELS), ("objective", OBJECTIVES), ("feedback", FEEDBACK)):
             if getattr(self, name) not in options:
                 raise ValueError(f"{name} must be one of {options}")
+        if type(self.carry_reasoning) is not bool:
+            raise ValueError("carry_reasoning must be True or False")
         if type(self.seed) is not int:
             raise ValueError("seed must be an integer")
         # Unique needs N + 1 colors; Constraints forbids a different color per agent.

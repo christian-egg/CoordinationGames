@@ -119,3 +119,13 @@ def test_stub_models_play_a_full_rollout(tmp_path):
     assert rollout["status"] == "complete"
     assert [r["choices"] for r in rollout["rounds"]] == [["red"] * 3] * 2
     assert rollout["summary"]["bits_sent"] == [8, 8, 8]
+
+
+def test_reasoning_details_are_extracted_from_chat_responses(monkeypatch):
+    saved = native("openai", ("pass", "{}"))
+    blocks = [{"type": "reasoning.summary", "summary": "s"}, {"type": "reasoning.encrypted", "data": "x"}]
+    saved["raw"]["choices"][0]["message"]["reasoning_details"] = blocks
+    fake_generate(monkeypatch, saved)
+    assert ModelAgent(model("openai"))(request(WRITE_TURN))["reasoning_details"] == blocks
+    fake_generate(monkeypatch, native("openai", ("pass", "{}")))  # none returned: nothing added
+    assert "reasoning_details" not in ModelAgent(model("openai"))(request(WRITE_TURN))

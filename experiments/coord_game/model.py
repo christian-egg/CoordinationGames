@@ -114,4 +114,13 @@ class ModelAgent:
                             temperature=cfg.temperature, seed=None)
         if cfg.transport in NATIVE_TRANSPORTS:
             response = decode_native(cfg.transport, response, request["available_actions"])
+        if cfg.transport == "openai":
+            # The provider's reasoning blocks (summary and encrypted full reasoning), so the
+            # game can pass them back on later calls. Responses-transport replay is not built.
+            raw = response.get("raw") if isinstance(response.get("raw"), dict) else {}
+            choices = raw.get("choices") if isinstance(raw.get("choices"), list) else []
+            message = choices[0].get("message") if len(choices) == 1 and isinstance(choices[0], dict) else {}
+            details = (message or {}).get("reasoning_details")
+            if isinstance(details, list) and details:
+                response["reasoning_details"] = details
         return response

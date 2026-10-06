@@ -163,7 +163,11 @@ def run_rollout(config: GameConfig, agents, *, output_dir, on_event=None) -> dic
             text = response.get("text")
             if not isinstance(text, str):
                 text = json.dumps(response["action"]) if isinstance(response.get("action"), dict) else ""
-            histories[agent].append({"role": "assistant", "content": text})
+            answer = {"role": "assistant", "content": text}
+            if config.carry_reasoning and isinstance(response.get("reasoning_details"), list):
+                # Sent back to this agent's model on its later calls; other agents never see it.
+                answer["reasoning_details"] = copy.deepcopy(response["reasoning_details"])
+            histories[agent].append(answer)
             try:
                 action = check_rules(parse_action(response, actions, channel), config, rnd["colors"])
             except ValueError as exc:
@@ -197,6 +201,7 @@ def run_rollout(config: GameConfig, agents, *, output_dir, on_event=None) -> dic
             "empty_choices": sum(c is None for r in scored for c in r["choices"]),
             "infrastructure_errors": len(infrastructure_errors),
             "bits_sent": [sum(r["bits_sent"][i] for r in scored) for i in range(n)],
+            "reasoning_carried": sum("reasoning_details" in m for h in histories for m in h),
         }
         rollout["finished_utc"] = datetime.now(timezone.utc).isoformat()
         write_json(directory / "rollout.json", rollout)

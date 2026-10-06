@@ -179,3 +179,29 @@ def test_every_objective_runs_end_to_end(tmp_path, objective):
         assert "Your private" in opening
     if objective == "unique":
         assert len(rollout["rounds"][0]["colors"]) == 4
+
+
+@pytest.mark.parametrize("carry", [True, False])
+def test_reasoning_is_carried_only_to_the_same_agent(tmp_path, carry):
+    details = lambda agent: [{"type": "reasoning.encrypted", "data": f"secret-of-agent-{agent}"}]
+
+    def make(agent):
+        def act(request):
+            action = {"action": "choose", "color": "red"} if request["available_actions"] == ["choose"] \
+                else {"action": "pass"}
+            return {"text": json.dumps(action), "reasoning_details": details(agent)}
+        act.requests = []
+        return lambda request: (act.requests.append(request), act(request))[1]
+
+    agents = [make(i) for i in range(3)]
+    seen = []
+    wrapped = [lambda r, a=a, i=i: (seen.append((i, r)), a(r))[1] for i, a in enumerate(agents)]
+    rollout = run_rollout(GameConfig(rounds=1, bits=4, carry_reasoning=carry), wrapped, output_dir=tmp_path / "run")
+    last_by_agent = {i: r for i, r in seen}
+    for i, request in last_by_agent.items():
+        carried = [m.get("reasoning_details") for m in request["messages"] if m["role"] == "assistant"]
+        if carry:
+            assert carried and all(c == details(i) for c in carried)  # its own, never another agent's
+        else:
+            assert all(c is None for c in carried)
+    assert rollout["summary"]["reasoning_carried"] == (9 if carry else 0)
