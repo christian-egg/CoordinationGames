@@ -17,7 +17,7 @@ from pathlib import Path
 
 from ai_collusion.runner import load_models
 
-from .config import FEEDBACK, GameConfig
+from .config import FEEDBACK, OBJECTIVES, GameConfig
 from .game import run_rollout
 from .model import ModelAgent
 from .prompts import label
@@ -52,6 +52,8 @@ def main(argv=None):
     parser.add_argument("--models-file", type=Path, default=DEFAULT_MODELS)
     parser.add_argument("--effort", choices=EFFORTS, default="medium",
                         help="reasoning effort, overriding the models file (default: medium)")
+    parser.add_argument("--objective", choices=OBJECTIVES, default="matching")
+    parser.add_argument("--n-agents", type=int, default=3, help="number of agents (default: 3)")
     parser.add_argument("--feedback", choices=FEEDBACK, default="full",
                         help="end-of-round report shown to agents (default: full)")
     parser.add_argument("--rollouts", type=int, default=1)
@@ -65,11 +67,12 @@ def main(argv=None):
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     for index in range(args.rollouts):
-        config = GameConfig(seed=args.seed + index, feedback=args.feedback)
+        config = GameConfig(seed=args.seed + index, feedback=args.feedback, objective=args.objective,
+                            n_agents=args.n_agents)
         calls = config.n_agents * config.rounds * config.turns
-        output_dir = REPO / "reports" / "coord-game" / f"{stamp}-{args.model}-{args.effort}-{args.feedback}-seed{config.seed}"
+        output_dir = REPO / "reports" / "coord-game" / f"{stamp}-{args.model}-{args.effort}-n{config.n_agents}-{args.objective}-{args.feedback}-seed{config.seed}"
         print(f"Rollout {index + 1}/{args.rollouts}: {model.model}, effort {args.effort}, "
-              f"feedback {args.feedback}, seed {config.seed}, {calls} calls -> {output_dir}", flush=True)
+              f"{config.n_agents} agents, {args.objective}, feedback {args.feedback}, seed {config.seed}, {calls} calls -> {output_dir}", flush=True)
         agents = [ModelAgent(model) for _ in range(config.n_agents)]
         rollout = None
         try:

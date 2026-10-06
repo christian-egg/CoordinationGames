@@ -26,7 +26,7 @@ def condition_tags(rollout):
     """Tags naming the experimental condition, e.g. ["feedback:full", "effort:medium"].
     Each tag is also a top-level metadata field, for filtering in Docent."""
     config = rollout["config"]
-    tags = [f"feedback:{config['feedback']}"]
+    tags = [f"objective:{config['objective']}", f"feedback:{config['feedback']}", f"agents:{config['n_agents']}"]
     efforts = {m.get("effort") for m in rollout.get("models") or []} - {None}
     if efforts:  # omitted when unknown (e.g. scripted agents)
         tags.append(f"effort:{efforts.pop() if len(efforts) == 1 else 'mixed'}")

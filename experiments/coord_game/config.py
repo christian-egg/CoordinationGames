@@ -11,7 +11,7 @@ CHANNELS = ("broadcast", "peer_to_peer")
 OBJECTIVES = ("matching", "unique", "dichotomy", "majority", "constraints")
 FEEDBACK = ("full", "score_only", "none")
 IMPLEMENTED_CHANNELS = ("broadcast",)
-IMPLEMENTED_OBJECTIVES = ("matching",)
+IMPLEMENTED_OBJECTIVES = OBJECTIVES
 
 
 @dataclass(frozen=True)

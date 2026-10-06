@@ -44,7 +44,7 @@ def test_run_metadata_and_stable_export_key(rollout):
     assert run.metadata["summary"]["infrastructure_errors"] == 2
     assert run.metadata["rounds"][0]["choices"] == ["red", "red", None]
     assert "3 agents | broadcast | matching | feedback full | seed 0" in run.name
-    assert run.metadata["tags"] == ["feedback:full"]  # plain callables have no effort to tag
+    assert run.metadata["tags"] == ["objective:matching", "feedback:full", "agents:3"]  # no effort tag here
     assert run.metadata["feedback"] == "full"
 
 

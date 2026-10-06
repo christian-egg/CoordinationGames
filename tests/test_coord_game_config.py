@@ -28,8 +28,7 @@ def test_invalid_values_are_rejected(field, value):
 
 
 @pytest.mark.parametrize("change", [
-    {"channel": "peer_to_peer"}, {"objective": "unique"}, {"objective": "dichotomy"},
-    {"objective": "majority"}, {"objective": "constraints"}, {"actions_per_turn": 2},
+    {"channel": "peer_to_peer"}, {"actions_per_turn": 2},
 ])
 def test_planned_options_build_but_cannot_run(change):
     config = GameConfig(**change)  # a valid config that can be saved and inspected

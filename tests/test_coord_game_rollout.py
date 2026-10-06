@@ -36,7 +36,8 @@ def test_full_rollout_scores_and_saves(tmp_path):
     assert [r["choices"] for r in rollout["rounds"]] == [["red"] * 3] * 2
     assert rollout["summary"]["mean_score"] == 1 and rollout["summary"]["objective_met"] == 2
     assert rollout["rounds"][0]["bits_sent"] == [4, 0, 0] and rollout["summary"]["bits_sent"] == [4, 0, 0]
-    assert rollout["prompt_version"] == "coord-game-v1"
+    from experiments.coord_game.prompts import PROMPT_VERSION
+    assert rollout["prompt_version"] == PROMPT_VERSION
     for name in ("rollout.json", "events.jsonl", "source/experiments/coord_game/game.py"):
         assert (tmp_path / "run" / name).exists()
     assert load_rollout(tmp_path / "run") == json.loads(json.dumps(rollout))
@@ -155,3 +156,26 @@ def test_round_colors_and_private_info_flow_through_the_loop(tmp_path, monkeypat
     assert rnd["choices"] == ["blue", "blue", None]  # "yellow" is invalid this round
     opening = agents[0].requests[0]["messages"][0]["content"]
     assert "Your preference: blue." in opening and '"yellow"' not in opening
+
+
+@pytest.mark.parametrize("objective", ["unique", "dichotomy", "majority", "constraints"])
+def test_every_objective_runs_end_to_end(tmp_path, objective):
+    """Scripted agents choose the first color of their own private list."""
+    def first_color(request):
+        if request["available_actions"] != ["choose"]:
+            return {"action": "pass"}
+        opening = [m["content"] for m in request["messages"] if m["content"].startswith("Round ")][-1]
+        colors = json.loads(opening.split("Your colors this round: ")[1].splitlines()[0])
+        return {"action": "choose", "color": colors[0]}
+
+    config = GameConfig(rounds=2, bits=4, objective=objective)
+    rollout = run_rollout(config, [first_color] * 3, output_dir=tmp_path / "run")
+    assert rollout["status"] == "complete" and rollout["summary"]["invalid_actions"] == 0
+    for rnd in rollout["rounds"]:
+        assert all(c in rnd["colors"] for c in rnd["choices"])
+        assert 0 <= rnd["result"]["score"] <= 1
+    opening = rollout["agents"][0]["messages"][0]["content"]
+    if objective in ("majority", "constraints"):
+        assert "Your private" in opening
+    if objective == "unique":
+        assert len(rollout["rounds"][0]["colors"]) == 4

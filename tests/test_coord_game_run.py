@@ -18,7 +18,7 @@ def test_run_uses_the_effort_override_and_saves_a_transcript(tmp_path, monkeypat
     monkeypatch.setattr(run, "REPO", tmp_path)
     run.main(["--model", "fake", "--models-file", str(models_file(tmp_path, effort="high")), "--seed", "7"])
     (output,) = (tmp_path / "reports" / "coord-game").iterdir()
-    assert output.name.endswith("-fake-medium-full-seed7")
+    assert output.name.endswith("-fake-medium-n3-matching-full-seed7")
     saved = json.loads((output / "rollout.json").read_text())
     assert saved["models"][0]["effort"] == "medium" and saved["models"][0]["name"] == "fake@medium"
     assert saved["summary"]["mean_score"] == 1
@@ -30,11 +30,21 @@ def test_feedback_flag_reaches_the_config(tmp_path, monkeypatch):
     monkeypatch.setattr(run, "REPO", tmp_path)
     run.main(["--model", "fake", "--models-file", str(models_file(tmp_path)), "--feedback", "score_only"])
     (output,) = (tmp_path / "reports" / "coord-game").iterdir()
-    assert output.name.endswith("-fake-medium-score_only-seed0")
+    assert output.name.endswith("-fake-medium-n3-matching-score_only-seed0")
     saved = json.loads((output / "rollout.json").read_text())
     assert saved["config"]["feedback"] == "score_only"
     report = [m["content"] for m in saved["agents"][0]["messages"] if m["content"].startswith("Round 1 results.")][0]
     assert "Final colors" not in report
+
+
+def test_n_agents_flag(tmp_path, monkeypatch):
+    monkeypatch.setattr(run, "REPO", tmp_path)
+    run.main(["--model", "fake", "--models-file", str(models_file(tmp_path)), "--n-agents", "5",
+              "--objective", "dichotomy"])
+    (output,) = (tmp_path / "reports" / "coord-game").iterdir()
+    assert output.name.endswith("-fake-medium-n5-dichotomy-full-seed0")
+    saved = json.loads((output / "rollout.json").read_text())
+    assert saved["config"]["n_agents"] == 5 and len(saved["agents"]) == 5
 
 
 def test_missing_key_stops_before_any_call(tmp_path, monkeypatch):

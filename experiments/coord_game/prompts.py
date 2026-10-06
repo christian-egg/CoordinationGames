@@ -11,7 +11,12 @@ from __future__ import annotations
 
 import json
 
-PROMPT_VERSION = "coord-game-v1"
+PROMPT_VERSION = "coord-game-v2"  # v2: the four new objectives; color count follows the objective
+
+
+def round_color_count(config):
+    """How many colors each round offers: N + 1 for Unique, otherwise every color."""
+    return config.n_agents + 1 if config.objective == "unique" else len(config.colors)
 
 
 def label(agent):
@@ -35,9 +40,21 @@ FIELD_DESCRIPTIONS = {
 
 # ----- Text keyed by objective, channel structure, and feedback level -----
 
+# Filled with n (agents), small and large (Dichotomy's group sizes), and small_agents
+# (e.g. "1 agent" / "2 agents").
 OBJECTIVE_PROMPTS = {
     "matching": "All agents must try to choose the same color. Any color on the list works, "
                 "as long as every agent chooses it.",
+    "unique": "All agents must choose different colors: no two agents may choose the same color.",
+    "dichotomy": ("The agents must split into two groups that choose two different colors: "
+                  "{small_agents} on one color and {large} on the other. Either color can have the "
+                  "bigger group, and any two colors on the list work."),
+    "majority": ("Each agent has a private color preference. All agents must choose the color that "
+                 "is the most common preference among all agents. Exactly one color is the most "
+                 "common preference."),
+    "constraints": ("Each agent has a private forbidden color, and no two agents have the same "
+                    "forbidden color. All agents must choose the same color, and it must not be any "
+                    "agent's forbidden color."),
 }
 
 CHANNEL_PROMPTS = {
@@ -52,7 +69,10 @@ CHANNEL_VIEW_HEADINGS = {
 
 # The private-information line in the round message, keyed by objective. Filled from
 # the agent's private-info dict, e.g. {"preference": "red"}. Added with each objective.
-PRIVATE_INFO_PROMPTS = {}
+PRIVATE_INFO_PROMPTS = {
+    "majority": "Your private color preference this round: {preference}.",
+    "constraints": "Your private forbidden color this round: {forbidden}.",
+}
 
 FEEDBACK_PROMPTS = {
     "full": "After each round, every agent is told the group's score and every agent's final color.",
@@ -97,7 +117,7 @@ def system_prompt(config, agent):
         "choice counts as no color, which never meets the objective.",
 
         f"At the start of each round, you are told the objective and given a list of "
-        f"{len(config.colors)} colors. Every agent gets the same colors, but each agent sees them "
+        f"{round_color_count(config)} colors. Every agent gets the same colors, but each agent sees them "
         "in its own private order, which is reshuffled every round.",
 
         f"The group's score for a round is 1 - d/{n}, where d is the smallest number of agents "
@@ -118,7 +138,9 @@ def system_prompt(config, agent):
 def round_message(config, agent, round_index, colors, private_info=None):
     """The opening message of a round: the objective, restated every round, and this agent's colors."""
     lines = [f"Round {round_index + 1} of {config.rounds}.",
-             f"Objective: {OBJECTIVE_PROMPTS[config.objective]}",
+             f"Objective: " + OBJECTIVE_PROMPTS[config.objective].format(
+                 n=config.n_agents, small=config.n_agents // 2, large=config.n_agents - config.n_agents // 2,
+                 small_agents=f"{config.n_agents // 2} agent" + ("" if config.n_agents // 2 == 1 else "s")),
              f"Your colors this round: {json.dumps(list(colors))}"]
     if private_info is not None:
         if config.objective not in PRIVATE_INFO_PROMPTS:
