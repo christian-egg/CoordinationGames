@@ -1,4 +1,4 @@
-"""Docent client helpers used by the color game uploader (experiments.color_game.docent_sync).
+"""Docent client helpers used by the coordination-game uploader (experiments.coord_game.docent_upload).
 
 Needs DOCENT_API_KEY in the environment (or in a .env next to pyproject.toml).
 """

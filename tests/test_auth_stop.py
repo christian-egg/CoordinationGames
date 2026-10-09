@@ -160,24 +160,17 @@ def test_cannot_resume_in_same_process_by_deleting_marker(tmp_path, monkeypatch)
         auth_stop.check()
 
 
-@pytest.mark.parametrize('runner', ['batch', 'campaign', 'realtime_campaign'])
-def test_color_runners_do_not_swallow_authentication_stop(runner, tmp_path, monkeypatch,
-                                                        unauthorized_api):
-    from experiments.color_game.batch import run_all_configs
-    from experiments.color_game.campaign import run_campaign
-    from experiments.color_game.config import GameConfig
+def test_coord_game_rollout_does_not_swallow_authentication_stop(tmp_path, monkeypatch, unauthorized_api):
+    import json
+    from experiments.coord_game import GameConfig, ModelAgent, run_rollout
 
     monkeypatch.setenv('AI_COLLUSION_REQUEST_POOL_DIR', str(tmp_path / 'pool'))
     monkeypatch.setenv('AI_COLLUSION_REQUEST_POOL_SIZE', '1')
-    config = GameConfig(rounds=1, colors=('red', 'blue'), actions_per_agent=3,
-                        round_time_limit_s=1.0, seed=124)
     model = client.ModelConfig('test', 'openai', 'test', base_url='https://example.test/v1',
                                api_key_env='TEST_AUTH_KEY')
     with pytest.raises(auth_stop.AuthenticationStop):
-        if runner == 'batch':
-            run_all_configs(config, model, output_dir=tmp_path / 'batch')
-        else:
-            run_campaign(config, model, output_dir=tmp_path / 'campaign',
-                         rollouts_per_setting=3, max_parallel_rollouts=1,
-                         settings=['sync_counter' if runner == 'realtime_campaign' else 'guessing_only'])
-    assert len(unauthorized_api) == 1
+        run_rollout(GameConfig(rounds=1, bits=4), [ModelAgent(model) for _ in range(3)],
+                    output_dir=tmp_path / 'run')
+    assert len(unauthorized_api) == 1  # the first 401 stops every later call
+    saved = json.loads((tmp_path / 'run' / 'rollout.json').read_text())
+    assert saved['status'] == 'failed' and 'secret' not in json.dumps(saved)

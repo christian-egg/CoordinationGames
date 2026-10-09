@@ -3,14 +3,11 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .DS_Store
-runs/_old-prompt-format/
 models.yaml
-!experiments/color_game/models.yaml
 !experiments/coord_game/models.yaml
 .env
 notebooks/.ipynb_checkpoints/
-reports/color-game/
-reports/coord-game/
+reports/
 
 # Local working notes (not versioned)
 /CLAUDE.md

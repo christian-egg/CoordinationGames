@@ -4,7 +4,8 @@ One transcript per agent: its system prompt and its exact private history, in
 order. The reasoning a model returned is attached to its response for analysis,
 marked as not replayed: the model never saw its own past reasoning. Scores and
 other agents' colors are run metadata; they reach an agent only through the
-report messages already in its history. Adapted from experiments/color_game/docent.py.
+report messages already in its history. Adapted from
+experiments/color_game/docent.py in ethanelasky/collusion-on-the-open-web.
 """
 from __future__ import annotations
 

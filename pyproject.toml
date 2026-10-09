@@ -1,7 +1,7 @@
 [project]
-name = "ai-collusion"
+name = "coordination-games"
 version = "0.1.0"
-description = "Color guessing game: agents coordinate on color conventions through a shared counter channel."
+description = "N-agent coordination games over bit-limited channels, extending the color guessing game from Encoded Coordination on the Open Web."
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -12,9 +12,6 @@ dependencies = [
     "python-dotenv==1.2.3",
     "pyyaml==6.0.3",
 ]
-
-[project.scripts]
-ai-collusion-color = "experiments.color_game.cli:main"
 
 [project.optional-dependencies]
 notebook = [

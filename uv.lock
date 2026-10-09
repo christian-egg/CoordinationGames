@@ -3,14 +3,14 @@ revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
-    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "python_full_version >= '3.14' and sys_platform != 'emscripten'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "python_full_version == '3.13.*' and sys_platform != 'emscripten'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
+    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
     "python_full_version < '3.12' and sys_platform == 'win32'",
     "python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
     "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 
@@ -24,50 +24,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/9d/95/2c28ca34e545ce0282e88272aa3a8abdf8f3f926a0492f567ea11acd071b/agent_client_protocol-0.12.1.tar.gz", hash = "sha256:9963ccb590ed96d7dc542c9c023e90676fc76b1c6562e21a9ee112f4fbcb0095", size = 130605, upload-time = "2026-08-16T14:08:22.545Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/21/61/0a2186c8ca53cf464767d4c4fb7fd9e23f48ce4547c2fa0d1c83a4d52410/agent_client_protocol-0.12.1-py3-none-any.whl", hash = "sha256:aaf3cc301ed87d9e2c4ccb91adfe1cd58784355f6ce7e513f50e7ca2391862ef", size = 85929, upload-time = "2026-08-16T14:08:21.307Z" },
-]
-
-[[package]]
-name = "ai-collusion"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "anthropic" },
-    { name = "docent-python" },
-    { name = "openai" },
-    { name = "python-dotenv" },
-    { name = "pyyaml" },
-]
-
-[package.optional-dependencies]
-notebook = [
-    { name = "ipykernel" },
-    { name = "nbclient" },
-    { name = "nbformat" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "jsonschema" },
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "anthropic", specifier = "==1.4.0" },
-    { name = "docent-python", specifier = "==0.1.75" },
-    { name = "ipykernel", marker = "extra == 'notebook'", specifier = ">=6.29" },
-    { name = "nbclient", marker = "extra == 'notebook'", specifier = ">=0.10" },
-    { name = "nbformat", marker = "extra == 'notebook'", specifier = ">=5.10" },
-    { name = "openai", specifier = "==3.8.0" },
-    { name = "python-dotenv", specifier = "==1.2.3" },
-    { name = "pyyaml", specifier = "==6.0.3" },
-]
-provides-extras = ["notebook"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "jsonschema", specifier = ">=4" },
-    { name = "pytest", specifier = ">=9.1.1" },
 ]
 
 [[package]]
@@ -672,6 +628,50 @@ wheels = [
 ]
 
 [[package]]
+name = "coordination-games"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "anthropic" },
+    { name = "docent-python" },
+    { name = "openai" },
+    { name = "python-dotenv" },
+    { name = "pyyaml" },
+]
+
+[package.optional-dependencies]
+notebook = [
+    { name = "ipykernel" },
+    { name = "nbclient" },
+    { name = "nbformat" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "jsonschema" },
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "anthropic", specifier = "==1.4.0" },
+    { name = "docent-python", specifier = "==0.1.75" },
+    { name = "ipykernel", marker = "extra == 'notebook'", specifier = ">=6.29" },
+    { name = "nbclient", marker = "extra == 'notebook'", specifier = ">=0.10" },
+    { name = "nbformat", marker = "extra == 'notebook'", specifier = ">=5.10" },
+    { name = "openai", specifier = "==3.8.0" },
+    { name = "python-dotenv", specifier = "==1.2.3" },
+    { name = "pyyaml", specifier = "==6.0.3" },
+]
+provides-extras = ["notebook"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "jsonschema", specifier = ">=4" },
+    { name = "pytest", specifier = ">=9.1.1" },
+]
+
+[[package]]
 name = "cryptography"
 version = "50.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1097,8 +1097,8 @@ name = "httpcore2"
 version = "2.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "h11", marker = "sys_platform != 'emscripten'" },
-    { name = "truststore", marker = "sys_platform != 'emscripten'" },
+    { name = "h11" },
+    { name = "truststore" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/be/ad/f4f0e57345f1870f3e8cb624e058d7eca6e5a27d33bcc3311d9b618734cd/httpcore2-2.12.0.tar.gz", hash = "sha256:9293522bba0aa7c4c8e9e3f040c16575bd8868e155a77fa30c7a9085a5eae648", size = 67548, upload-time = "2026-08-18T13:22:08.211Z" }
 wheels = [
@@ -2041,10 +2041,10 @@ version = "2.5.3"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
-    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "python_full_version >= '3.14' and sys_platform != 'emscripten'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "python_full_version == '3.13.*' and sys_platform != 'emscripten'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
@@ -2500,7 +2500,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess", marker = "(python_full_version >= '3.13' and sys_platform == 'win32') or (sys_platform != 'emscripten' and sys_platform != 'win32')" },
+    { name = "ptyprocess" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -3959,7 +3959,7 @@ name = "zipfile-zstd"
 version = "0.0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zstandard", marker = "python_full_version < '3.14'" },
+    { name = "zstandard" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f7/2a/2e0941bc0058d10ab37d8c578b94a19f611f6ae54f124140f2fb451f0932/zipfile-zstd-0.0.4.tar.gz", hash = "sha256:c1498e15b7922a3d1af0ea55df8b11b2af4e8f7e0e80e414e25d66899f7def89", size = 4603, upload-time = "2021-12-08T07:38:16.245Z" }
 wheels = [

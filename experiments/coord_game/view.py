@@ -3,7 +3,8 @@
 The view is for the researcher: it shows every agent's private history side by
 side. The game never shows this combined view to any agent. All model text is
 escaped, so a response cannot inject HTML or scripts. No network is needed.
-Escaping helpers, styles, and layout are adapted from experiments/color_game/view.py.
+Escaping helpers, styles, and layout are adapted from the color game's
+experiments/color_game/view.py in ethanelasky/collusion-on-the-open-web.
 """
 from __future__ import annotations
 

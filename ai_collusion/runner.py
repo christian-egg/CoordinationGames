@@ -1,4 +1,4 @@
-"""Load API keys and model configurations for color game runs."""
+"""Load API keys and model configurations for coordination-game runs."""
 from __future__ import annotations
 
 from pathlib import Path

@@ -36,7 +36,7 @@ SCHEMA = "coord-game/v1"
 
 
 class Journal:
-    """Append-only event log. Copied from the color game's _Journal."""
+    """Append-only event log. Copied from the color game's _Journal (ethanelasky/collusion-on-the-open-web)."""
 
     def __init__(self, path, on_event=None):
         self.file = Path(path).open("x", encoding="utf-8")  # never overwrite a journal

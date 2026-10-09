@@ -1,7 +1,8 @@
 """The action set, its tool schemas, and the two kinds of action check.
 
 - Shape checks (parse_action): the response holds exactly one action with exactly
-  its declared fields, all strings. Adapted from the color game's _parse_action.
+  its declared fields, all strings. Adapted from the color game's _parse_action
+  (ethanelasky/collusion-on-the-open-web).
 - Rule checks (check_rules): the action is legal in this game, e.g. a message of
   exactly B bits, or a color from the list (in any capitalization).
 

@@ -11,7 +11,7 @@ Field-level checks are left to actions.parse_action, so there is one parser.
 A response that isn't exactly one offered call gets response_tool_error, which
 parse_action rejects. The provider's raw response is always kept.
 
-Adapted from experiments/color_game/model.py, without the counter, realtime,
+Adapted from experiments/color_game/model.py in ethanelasky/collusion-on-the-open-web, without the counter, realtime,
 and tool_choice="auto" parts.
 """
 from __future__ import annotations
