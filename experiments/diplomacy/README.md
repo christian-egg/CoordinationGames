@@ -7,6 +7,7 @@ not copied here; this folder holds only what's needed to rebuild our setup:
 
 - `ai_diplomacy.patch`: our changes to upstream commit `736a0a9` (2026-06-01).
 - `cost_summary.py`: totals the cost of Diplomacy runs and coordination-game rollouts.
+- `dashboard.py`: turns a game into static HTML pages for reading the trajectory.
 
 We picked AI_Diplomacy because it already supports OpenRouter and per-power models.
 [joehahn/diplomacy-A2A](https://github.com/joehahn/diplomacy-A2A) has a nicer transcript
@@ -101,6 +102,36 @@ To regenerate both tables:
 ```bash
 uv run python -m experiments.diplomacy.cost_summary ~/AI_Diplomacy/results/*/ reports/coord-game/*/
 ```
+
+## Reading a game
+
+`dashboard.py` writes a static site into `<run>/dashboard/`, using a layout adapted from
+diplomacy-A2A's transcript viewer (MIT license). Open `index.html` in a browser; no server
+is needed.
+
+```bash
+uv run --project ~/AI_Diplomacy python -m experiments.diplomacy.dashboard ~/AI_Diplomacy/results/luna_medium_1910
+```
+
+`--project ~/AI_Diplomacy` runs the script in AI_Diplomacy's environment, because the maps
+are drawn with the `diplomacy` engine bundled there. `--no-maps` skips the maps.
+
+- **Index:** settings and cost, final standings, supply centers by year, and a list of
+  turns showing message and invalid-order counts.
+- **Turn pages:** one per movement phase, also covering the retreats and builds that
+  follow it. Each has:
+  - an orders map (arrows show moves) and a result map;
+  - every order with its result, including invalid orders that were dropped;
+  - supply centers gained and lost;
+  - each power's two diary entries (written after the talks and after the results);
+  - a matrix of how each power rates the others, and each power's goals.
+- **Negotiation pages:** a 7×7 table of how many messages each pair exchanged. Clicking a
+  cell shows only that pair's conversation, laid out in two columns with one row per round
+  (R1–R3). Public messages get their own section.
+
+The maps come from replaying the recorded orders through the engine. The script checks the
+replayed board against the recorded one in every phase, and stops drawing maps if they
+ever differ.
 
 ## Things to know about the outputs
 
