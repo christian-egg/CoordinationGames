@@ -1,11 +1,12 @@
 # Diplomacy cost baseline
 
 This folder checks how much a full LLM game of Diplomacy costs, as a reference point for
-coordination-game rollouts. The game itself is
-[GoodStartLabs/AI_Diplomacy](https://github.com/GoodStartLabs/AI_Diplomacy). Its code is
-not copied here; this folder holds only what's needed to rebuild our setup:
+coordination-game rollouts. The game itself is our fork of
+[GoodStartLabs/AI_Diplomacy](https://github.com/GoodStartLabs/AI_Diplomacy):
+[christian-egg/AI_Diplomacy](https://github.com/christian-egg/AI_Diplomacy), branch
+`collusion`, which starts from upstream commit `736a0a9` (2026-06-01). Changes to the
+harness itself go there. This folder holds the tools that only read saved games:
 
-- `ai_diplomacy.patch`: our changes to upstream commit `736a0a9` (2026-06-01).
 - `cost_summary.py`: totals the cost of Diplomacy runs and coordination-game rollouts.
 - `dashboard.py`: turns a game into static HTML pages for reading the trajectory.
 
@@ -15,21 +16,21 @@ viewer, but only talks to Anthropic models.
 
 ## Setup
 
-AI_Diplomacy lives outside this repo (we use `~/AI_Diplomacy`). It needs Python 3.13; with
-uv's default 3.14, the pinned pillow has no wheel and the build fails.
+The fork lives outside this repo (we use `~/AI_Diplomacy`). It needs Python 3.13; with
+uv's default 3.14, the pinned pillow has no wheel and the build fails. Adding upstream as
+a second remote lets you pull in GoodStartLabs' later fixes.
 
 ```bash
-git clone https://github.com/GoodStartLabs/AI_Diplomacy.git ~/AI_Diplomacy
+git clone -b collusion https://github.com/christian-egg/AI_Diplomacy.git ~/AI_Diplomacy
 cd ~/AI_Diplomacy
-git checkout 736a0a9
-git apply ~/CoordinationGames/experiments/diplomacy/ai_diplomacy.patch
+git remote add upstream https://github.com/GoodStartLabs/AI_Diplomacy.git
 uv sync --python 3.13
 ```
 
 ## Running a game
 
 The OpenRouter key comes from this repo's `.env`. Effort and the usage log are read from
-environment variables added by the patch. Effort is not written to the run's own files, so
+environment variables added on the `collusion` branch. Effort is not written to the run's own files, so
 name the run folder after it.
 
 ```bash
@@ -46,26 +47,28 @@ uv run python lm_game.py --max_year 1910 --num_negotiation_rounds 3 \
 `--max_year` is inclusive, so 1910 plays ten years. `--num_negotiation_rounds` defaults to
 0 (no talking); 3 matches the upstream README examples.
 
-## What the patch changes
+## Changes from upstream
 
-All changes are in `OpenRouterClient` (`ai_diplomacy/clients.py`), apart from the prompt fix.
+The `collusion` branch's first two commits hold the changes the cost runs used. Apart from
+the prompt fix, all of them are in `OpenRouterClient` (`ai_diplomacy/clients.py`). The
+numbers below are the ones the run table refers to.
 
-1. **Reasoning effort.** Upstream sends no effort setting to OpenRouter. The patch sends
+1. **Reasoning effort.** Upstream sends no effort setting to OpenRouter. The branch sends
    `reasoning_effort` from `OPENROUTER_REASONING_EFFORT`, the same field
    `experiments/coord_game/model.py` sends.
-2. **Temperature.** Upstream hard-codes `temperature=0`. The patch leaves it at the provider
+2. **Temperature.** Upstream hard-codes `temperature=0`. The branch leaves it at the provider
    default, matching our `temperature: null`.
 3. **Cost logging.** Each call's usage, including the cost OpenRouter billed, is appended
    to `OPENROUTER_USAGE_LOG`.
 4. **Prompt caching.** Upstream puts a random seed at the very top of every system prompt,
-   so no two prompts share a beginning and nothing can be cached. The patch moves the seed
+   so no two prompts share a beginning and nothing can be cached. The branch moves the seed
    to the end of the user message. It also splits each negotiation prompt at
    `Messages This Round` and marks the first part as a cache breakpoint. The text the model
    sees is the same, just sent as two parts. Moving the seed alone gave 0% cache hits
    (`luna_medium_1910_seedlast`); the breakpoint is what makes caching work.
 5. **Empty prompt fix.** Upstream's `prompts_simple/initial_state_prompt.txt` is an empty
    file, so at the start of the game every power was asked for goals and relationships with
-   no instructions, and answered with move orders instead. The patch fills it with upstream's
+   no instructions, and answered with move orders instead. The branch fills it with upstream's
    own JSON version from `prompts/prompts_hold_reduction_v3/`.
 
 ## Measured costs
@@ -74,14 +77,14 @@ All games use 7 powers, 3 negotiation rounds, and `max_tokens` 16000. Costs are 
 amounts from `openrouter_usage.jsonl`. For the 10-09 runs, they match the change in the
 key's spend counter.
 
-| Run | Date | Model, effort | Years | Patch version | Calls | Input cached | Cost | Time |
+| Run | Date | Model, effort | Years | Changes used | Calls | Input cached | Cost | Time |
 |---|---|---|---|---|---|---|---|---|
 | `luna_medium_1902` | 10-09 | Luna 5.6, medium | 1901–02 | items 1–3, 5 | 192 | 0% | $0.30 | 4 min |
 | `luna_medium_1910` | 10-09 | Luna 5.6, medium | 1901–10 | items 1–3, 5 | 953 | 0% | $1.75 | 28 min |
 | `luna_medium_1910_seedlast` | 10-10 | Luna 5.6, medium | stopped early | seed moved only | 119 | 0% | $0.17 | 3 min |
-| `luna_medium_1910_cached` | 10-10 | Luna 5.6, medium | 1901–10 | full patch | 954 | 26% | $1.57 | 29 min |
-| `luna_high_1910_cached` | 10-10 | Luna 5.6, high | 1901–10 | full patch | 908 | 27% | $2.55 | 77 min |
-| `sol_high_1902_cached` | 10-10 | Sol 5.6, high | 1901–02 | full patch | 191 | 23% | $3.86 | 13 min |
+| `luna_medium_1910_cached` | 10-10 | Luna 5.6, medium | 1901–10 | items 1–5 | 954 | 26% | $1.57 | 29 min |
+| `luna_high_1910_cached` | 10-10 | Luna 5.6, high | 1901–10 | items 1–5 | 908 | 27% | $2.55 | 77 min |
+| `sol_high_1902_cached` | 10-10 | Sol 5.6, high | 1901–02 | items 1–5 | 191 | 23% | $3.86 | 13 min |
 
 For comparison, coordination-game rollouts (5 rounds × 3 turns, Luna 5.6). These costs are
 estimated by pricing logged token counts at list prices; summed over all rollouts, the

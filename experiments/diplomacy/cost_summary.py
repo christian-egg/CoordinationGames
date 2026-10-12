@@ -5,7 +5,7 @@
 
 Reads saved runs only (no model calls).
 
-- AI_Diplomacy runs: reads `openrouter_usage.jsonl`, written by ai_diplomacy.patch.
+- AI_Diplomacy runs: reads `openrouter_usage.jsonl`, written by the fork's OpenRouter client.
   Each line holds the cost OpenRouter billed for that call, so these totals are exact.
 - Coordination-game rollouts: reads `events.jsonl` and prices the token counts at the
   list prices below, since the rollouts don't record billed cost. Rollouts are grouped
